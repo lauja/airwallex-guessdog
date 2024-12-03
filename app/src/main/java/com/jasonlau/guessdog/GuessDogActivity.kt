@@ -10,8 +10,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.jasonlau.guessdog.ui.theme.GuessDogTheme
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -23,10 +25,11 @@ class GuessDogActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
-        viewModel.getAllBreeds()
-
         setContent {
             GuessDogTheme {
+                val viewState by viewModel.viewState.collectAsStateWithLifecycle()
+                viewModel.getDogData()
+                val breedData = viewState.contentStateOrNull?.data
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     Greeting(
                         name = "Android",

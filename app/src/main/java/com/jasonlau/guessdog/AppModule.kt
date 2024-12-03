@@ -25,5 +25,5 @@ class AppModule {
     @Provides
     fun provideGuessDogRepository(
         dogApi: DogApi
-    ): GuessDogRepository = GuessDogRepository(dogApi)
+    ): GuessDogRepository = GuessDogRepositoryImpl(dogApi)
 }
