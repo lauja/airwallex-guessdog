@@ -1,4 +1,7 @@
-package com.jasonlau.guessdog
+package com.jasonlau.guessdog.repository
+
+import com.jasonlau.guessdog.data.AllBreedsResponse
+import com.jasonlau.guessdog.data.RandomBreedImageResponse
 
 class GuessDogRepositoryImpl(
     private val dogApi: DogApi

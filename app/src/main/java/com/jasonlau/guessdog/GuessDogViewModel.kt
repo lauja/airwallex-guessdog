@@ -2,6 +2,9 @@ package com.jasonlau.guessdog
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.jasonlau.guessdog.data.BreedData
+import com.jasonlau.guessdog.data.Status
+import com.jasonlau.guessdog.repository.GuessDogRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

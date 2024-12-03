@@ -1,4 +1,4 @@
-package com.jasonlau.guessdog
+package com.jasonlau.guessdog.data
 
 data class BreedData(
     val imageUrl: String,

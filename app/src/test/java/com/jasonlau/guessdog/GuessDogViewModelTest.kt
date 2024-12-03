@@ -1,5 +1,6 @@
 package com.jasonlau.guessdog
 
+import com.jasonlau.guessdog.repository.FakeGuessDogRepositoryImpl
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Rule

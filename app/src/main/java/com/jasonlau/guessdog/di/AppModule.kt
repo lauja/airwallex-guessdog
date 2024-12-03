@@ -1,6 +1,9 @@
-package com.jasonlau.guessdog
+package com.jasonlau.guessdog.di
 
 import com.google.gson.Gson
+import com.jasonlau.guessdog.repository.DogApi
+import com.jasonlau.guessdog.repository.GuessDogRepository
+import com.jasonlau.guessdog.repository.GuessDogRepositoryImpl
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn

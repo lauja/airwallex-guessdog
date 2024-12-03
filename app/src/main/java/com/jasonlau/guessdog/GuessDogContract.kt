@@ -1,5 +1,7 @@
 package com.jasonlau.guessdog
 
+import com.jasonlau.guessdog.data.BreedData
+
 interface GuessDogContract {
     sealed interface ViewState {
         data class Content(
