@@ -3,6 +3,7 @@ package com.jasonlau.guessdog
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.jasonlau.guessdog.data.BreedData
+import com.jasonlau.guessdog.data.RandomBreedImageResponse
 import com.jasonlau.guessdog.data.Status
 import com.jasonlau.guessdog.repository.GuessDogRepository
 import com.jasonlau.guessdog.util.BreedMapTransformer
@@ -26,7 +27,9 @@ class GuessDogViewModel @Inject constructor(
 
     val viewState: StateFlow<GuessDogContract.ViewState> = mutableViewState.asStateFlow()
 
-    fun getDogData() {
+    fun getDogData(
+        refreshScores: Boolean = true
+    ) {
         viewModelScope.launch {
             val allBreedsResponse = guessDogRepository.getAllBreeds()
             val randomBreedImage = guessDogRepository.getRandomBreedImage()
@@ -44,23 +47,36 @@ class GuessDogViewModel @Inject constructor(
                     if (correctAnswerKey == null || allBreeds[correctAnswerKey] == null) {
                         GuessDogContract.ViewState.Error
                     } else {
-                        GuessDogContract.ViewState.Content(
-                            BreedData(
-                                imageUrl = randomBreedImage.imageUrl,
-                                breedAnswers = randomBreedChooser.chooseRandomBreedLabels(
-                                    numberOfNamesToChoose = NUMBER_OF_POSSIBLE_ANSWERS - 1, // excludes correct answer
-                                    correctAnswerKey = correctAnswerKey,
-                                    breedMap = allBreeds
-                                ),
-                                correctAnswer = allBreeds[correctAnswerKey]!!
-                            )
-                        )
+                        getBreedContent(randomBreedImage, allBreeds, correctAnswerKey, refreshScores)
                     }
                 }
             }
         }
     }
 
+    private fun getBreedContent(
+        randomBreedImage: RandomBreedImageResponse,
+        allBreeds: Map<String, String>,
+        correctAnswerKey: String,
+        refreshScores: Boolean
+    ) = GuessDogContract.ViewState.Content(
+            BreedData(
+                imageUrl = randomBreedImage.imageUrl,
+                breedAnswers = randomBreedChooser.chooseRandomBreedLabels(
+                    numberOfNamesToChoose = NUMBER_OF_POSSIBLE_ANSWERS - 1, // excludes correct answer
+                    correctAnswerKey = correctAnswerKey,
+                    breedMap = allBreeds
+                ),
+                correctAnswer = allBreeds[correctAnswerKey]!!
+            ),
+            numberCorrect = if (refreshScores) 0 else mutableViewState.value.contentStateOrNull?.numberCorrect ?: 0,
+            numberAnswered = if (refreshScores) 0 else mutableViewState.value.contentStateOrNull?.numberAnswered ?: 0
+        )
+
+    /**
+     * Note: doesn't seem to work for danish-swedish-farmdog!
+     * https://images.dog.ceo/breeds/danish-swedish-farmdog/ebba_004.jpg
+     */
     private fun getBreedFromRandomImageUrl(imageUrl: String): String? {
         return try {
             // eg. https://images.dog.ceo/breeds/terrier-yorkshire/n02094433_3526.jpg
@@ -76,7 +92,7 @@ class GuessDogViewModel @Inject constructor(
             mutableViewState.update {
                 GuessDogContract.ViewState.Content(
                     data = content.data,
-                    numberCorrect = content.numberCorrect + if (selected === correctAnswer) 1 else 0,
+                    numberCorrect = content.numberCorrect + if (selected == correctAnswer) 1 else 0,
                     numberAnswered = content.numberAnswered + 1
                 )
             }

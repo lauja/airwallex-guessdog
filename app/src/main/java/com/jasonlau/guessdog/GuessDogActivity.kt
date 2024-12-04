@@ -35,6 +35,8 @@ class GuessDogActivity : ComponentActivity() {
                         onAnswerSelected = viewModel::onAnswerSelected,
                         numberCorrect = content.numberCorrect,
                         numberAnswered = content.numberAnswered,
+                        onResetClicked = { viewModel.getDogData() },
+                        onNextClicked = { viewModel.getDogData(false) }
                     )
                 }
             }
