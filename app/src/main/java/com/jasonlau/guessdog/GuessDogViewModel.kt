@@ -5,18 +5,20 @@ import androidx.lifecycle.viewModelScope
 import com.jasonlau.guessdog.data.BreedData
 import com.jasonlau.guessdog.data.Status
 import com.jasonlau.guessdog.repository.GuessDogRepository
+import com.jasonlau.guessdog.util.BreedMapTransformer
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import java.util.Locale
 import javax.inject.Inject
 
 @HiltViewModel
 class GuessDogViewModel @Inject constructor(
-    private val guessDogRepository: GuessDogRepository
+    private val guessDogRepository: GuessDogRepository,
+    private val breedMapTransformer: BreedMapTransformer,
+    private val randomBreedChooser: RandomBreedChooser,
 ) : ViewModel() {
     private val mutableViewState: MutableStateFlow<GuessDogContract.ViewState> = MutableStateFlow(
         GuessDogContract.ViewState.Loading,
@@ -34,49 +36,42 @@ class GuessDogViewModel @Inject constructor(
                     GuessDogContract.ViewState.Error
                 }
             } else {
-                val allBreeds = transformBreedsResponseToDisplayMap(allBreedsResponse.breeds)
+                val allBreeds = breedMapTransformer.transformBreedsResponseToDisplayMap(allBreedsResponse.breeds)
                 mutableViewState.update {
-                    GuessDogContract.ViewState.Content(
-                        BreedData(
-                            imageUrl = randomBreedImage.imageUrl,
-                            breedKeyToLabeMap = allBreeds
+                    val correctAnswerKey = getBreedFromRandomImageUrl(randomBreedImage.imageUrl)
+                    // something wrong with extracting the breed name from the URL,
+                    // or breed does not exist in the all breeds map
+                    if (correctAnswerKey == null || allBreeds[correctAnswerKey] == null) {
+                        GuessDogContract.ViewState.Error
+                    } else {
+                        GuessDogContract.ViewState.Content(
+                            BreedData(
+                                imageUrl = randomBreedImage.imageUrl,
+                                breedAnswers = randomBreedChooser.chooseRandomBreedLabels(
+                                    numberOfNamesToChoose = NUMBER_OF_POSSIBLE_ANSWERS - 1, // excludes correct answer
+                                    correctAnswerKey = correctAnswerKey,
+                                    breedMap = allBreeds
+                                ),
+                                correctAnswer = allBreeds[correctAnswerKey]!!
+                            )
                         )
-                    )
+                    }
                 }
             }
         }
     }
 
-    /**
-     * Transforms the response from all breeds to a key-value
-     * map of breed to display label
-     * eg.
-     * 		"appenzeller": [],
-     * 		"australian": ["kelpie", "shepherd"],
-     * 		"bakharwal": ["indian"],
-     *
-     *      "appenzeller": "Appenzeller",
-     *      "kelpie-australian": "Kelpie Australian"
-     *      "shepherd-australian": "Shepherd Australian"
-     *      "bakharwal": "Indian Bakharwal"
-     */
-    private fun transformBreedsResponseToDisplayMap(allBreedsMap: Map<String, Array<String>>): Map<String, String> {
-        val keyToDisplayMap = mutableMapOf<String, String>()
-
-        allBreedsMap.entries.forEach { entry ->
-            val breed = entry.key
-            if (entry.value.isEmpty()) {
-                keyToDisplayMap[breed] = breed.capitalise()
-            } else {
-                entry.value.forEach { subBreed ->
-                    keyToDisplayMap["$breed-$subBreed"] = "${subBreed.capitalise()} ${breed.capitalise()}"
-                }
-            }
+    private fun getBreedFromRandomImageUrl(imageUrl: String): String? {
+        return try {
+            // eg. https://images.dog.ceo/breeds/terrier-yorkshire/n02094433_3526.jpg
+            val urlSplit = imageUrl.split("/")
+            urlSplit[urlSplit.size - 2] // eg. 2nd path segment from the end
+        } catch (ex: IndexOutOfBoundsException) {
+            null
         }
-
-        return keyToDisplayMap
     }
 
-    private fun String.capitalise(): String =
-        this.replaceFirstChar { firstChar -> if (firstChar.isLowerCase()) firstChar.titlecase(Locale.getDefault()) else firstChar.toString() }
+    companion object {
+        private const val NUMBER_OF_POSSIBLE_ANSWERS = 4
+    }
 }
