@@ -27,11 +27,14 @@ class GuessDogActivity : ComponentActivity() {
             val viewState by viewModel.viewState.collectAsStateWithLifecycle()
             viewModel.getDogData()
             GuessDogTheme {
-                viewState.contentStateOrNull?.data?.let {
+                viewState.contentStateOrNull?.let { content ->
                     GuessDogScreen(
-                        imageUrl = it.imageUrl,
-                        possibleChoices = it.breedAnswers,
-                        correctAnswer = it.correctAnswer,
+                        imageUrl = content.data.imageUrl,
+                        possibleChoices = content.data.breedAnswers,
+                        correctAnswer = content.data.correctAnswer,
+                        onAnswerSelected = viewModel::onAnswerSelected,
+                        numberCorrect = content.numberCorrect,
+                        numberAnswered = content.numberAnswered,
                     )
                 }
             }

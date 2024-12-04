@@ -6,7 +6,11 @@ class RandomBreedChooser {
      * then returns the label for that given keys
      */
     fun chooseRandomBreedLabels(numberOfNamesToChoose: Int, correctAnswerKey: String, breedMap: Map<String, String>): List<String> =
-        breedMap.keys.filterNot { it === correctAnswerKey }.shuffled().take(numberOfNamesToChoose).plus(correctAnswerKey)
+        breedMap.keys.filterNot { it === correctAnswerKey }
+            .shuffled()
+            .take(numberOfNamesToChoose)
+            .plus(correctAnswerKey)
+            .shuffled()
             .mapNotNull {
                 breedMap[it]
             }

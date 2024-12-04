@@ -71,6 +71,18 @@ class GuessDogViewModel @Inject constructor(
         }
     }
 
+    fun onAnswerSelected(selected: String, correctAnswer: String) {
+        mutableViewState.value.contentStateOrNull?.let { content ->
+            mutableViewState.update {
+                GuessDogContract.ViewState.Content(
+                    data = content.data,
+                    numberCorrect = content.numberCorrect + if (selected === correctAnswer) 1 else 0,
+                    numberAnswered = content.numberAnswered + 1
+                )
+            }
+        }
+    }
+
     companion object {
         private const val NUMBER_OF_POSSIBLE_ANSWERS = 4
     }
