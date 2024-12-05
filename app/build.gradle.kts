@@ -13,7 +13,7 @@ plugins {
 
 android {
     namespace = "com.jasonlau.guessdog"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.jasonlau.guessdog"
@@ -94,7 +94,7 @@ dependencies {
     // Coil
     implementation(libs.coil.compose)
 
-    implementation(libs.paparazzi) {
+    testImplementation(libs.paparazzi) {
         exclude(group = "org.bouncycastle", module = "bcpkix-jdk18on")
             .because("The version of bcpkix-jdk15on brought-in by paparazzi causes `TrustAllX509TrustManager` lint error.")
     }
