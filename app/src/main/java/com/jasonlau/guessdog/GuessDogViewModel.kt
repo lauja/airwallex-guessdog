@@ -15,6 +15,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.io.IOException
 import javax.inject.Inject
 
 @HiltViewModel
@@ -40,18 +41,22 @@ class GuessDogViewModel @Inject constructor(
                 )
             }
 
-            val allBreedsResponse = guessDogRepository.getAllBreeds()
-            val randomBreedImageResponse = guessDogRepository.getRandomBreedImage()
+            try {
+                val allBreedsResponse = guessDogRepository.getAllBreeds()
+                val randomBreedImageResponse = guessDogRepository.getRandomBreedImage()
 
-            if (allBreedsResponse.isSuccessful && randomBreedImageResponse.isSuccessful) {
-                val allBreedsBody = allBreedsResponse.body()
-                val randomBreedImageBody = randomBreedImageResponse.body()
-                if (allBreedsBody?.status != Status.SUCCESS || randomBreedImageBody?.status != Status.SUCCESS) {
-                    showError()
+                if (allBreedsResponse.isSuccessful && randomBreedImageResponse.isSuccessful) {
+                    val allBreedsBody = allBreedsResponse.body()
+                    val randomBreedImageBody = randomBreedImageResponse.body()
+                    if (allBreedsBody?.status != Status.SUCCESS || randomBreedImageBody?.status != Status.SUCCESS) {
+                        showError()
+                    } else {
+                        handleSuccessfulResponse(allBreedsBody, randomBreedImageBody, refreshScores)
+                    }
                 } else {
-                    handleSuccessfulResponse(allBreedsBody, randomBreedImageBody, refreshScores)
+                    showError()
                 }
-            } else {
+            } catch (ex: IOException) { // possible issues with json mapping, eg malformed json
                 showError()
             }
         }
