@@ -2,6 +2,7 @@ package com.jasonlau.guessdog
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.jasonlau.guessdog.data.AllBreedsResponse
 import com.jasonlau.guessdog.data.BreedData
 import com.jasonlau.guessdog.data.RandomBreedImageResponse
 import com.jasonlau.guessdog.data.Status
@@ -40,31 +41,46 @@ class GuessDogViewModel @Inject constructor(
             }
 
             val allBreedsResponse = guessDogRepository.getAllBreeds()
-            val randomBreedImage = guessDogRepository.getRandomBreedImage()
+            val randomBreedImageResponse = guessDogRepository.getRandomBreedImage()
 
-            if (allBreedsResponse.status != Status.SUCCESS || randomBreedImage.status != Status.SUCCESS) {
-                mutableViewState.update {
-                    mutableViewState.value.copy(
-                        isLoading = false,
-                        hasError = true,
-                    )
+            if (allBreedsResponse.isSuccessful && randomBreedImageResponse.isSuccessful) {
+                val allBreedsBody = allBreedsResponse.body()
+                val randomBreedImageBody = randomBreedImageResponse.body()
+                if (allBreedsBody?.status != Status.SUCCESS || randomBreedImageBody?.status != Status.SUCCESS) {
+                    showError()
+                } else {
+                    handleSuccessfulResponse(allBreedsBody, randomBreedImageBody, refreshScores)
                 }
             } else {
-                val allBreeds = breedMapTransformer.transformBreedsResponseToDisplayMap(allBreedsResponse.breeds)
-                mutableViewState.update {
-                    val correctAnswerKey = getBreedFromRandomImageUrl(randomBreedImage.imageUrl)
-                    // something wrong with extracting the breed name from the URL,
-                    // or breed does not exist in the all breeds map
-                    if (correctAnswerKey == null || allBreeds[correctAnswerKey] == null) {
-                        mutableViewState.value.copy(
-                            isLoading = false,
-                            hasError = true,
-                        )
-                    } else {
-                        getBreedContent(randomBreedImage, allBreeds, correctAnswerKey, refreshScores)
-                    }
-                }
+                showError()
             }
+        }
+    }
+
+    private fun handleSuccessfulResponse(
+        allBreedsResponse: AllBreedsResponse,
+        randomBreedImage: RandomBreedImageResponse,
+        refreshScores: Boolean,
+    ) {
+        val allBreeds = breedMapTransformer.transformBreedsResponseToDisplayMap(allBreedsResponse.breeds)
+        val correctAnswerKey = getBreedFromRandomImageUrl(randomBreedImage.imageUrl)
+        // something wrong with extracting the breed name from the URL,
+        // or breed does not exist in the all breeds map
+        if (correctAnswerKey == null || allBreeds[correctAnswerKey] == null) {
+            showError()
+        } else {
+            mutableViewState.update {
+                getBreedContent(randomBreedImage, allBreeds, correctAnswerKey, refreshScores)
+            }
+        }
+    }
+
+    private fun showError() {
+        mutableViewState.update {
+            mutableViewState.value.copy(
+                isLoading = false,
+                hasError = true,
+            )
         }
     }
 
