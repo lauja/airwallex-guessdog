@@ -21,22 +21,32 @@ class GuessDogViewModel @Inject constructor(
     private val breedMapTransformer: BreedMapTransformer,
     private val randomBreedChooser: RandomBreedChooser,
 ) : ViewModel() {
-    private val mutableViewState: MutableStateFlow<GuessDogContract.ViewState> = MutableStateFlow(
-        GuessDogContract.ViewState.Loading,
+    private val mutableViewState: MutableStateFlow<GuessDogUiState> = MutableStateFlow(
+        GuessDogUiState(),
     )
 
-    val viewState: StateFlow<GuessDogContract.ViewState> = mutableViewState.asStateFlow()
+    val viewState: StateFlow<GuessDogUiState> = mutableViewState.asStateFlow()
 
     fun getDogData(
         refreshScores: Boolean = true
     ) {
         viewModelScope.launch {
+            mutableViewState.update {
+                mutableViewState.value.copy(
+                    isLoading = true,
+                    hasError = false,
+                )
+            }
+
             val allBreedsResponse = guessDogRepository.getAllBreeds()
             val randomBreedImage = guessDogRepository.getRandomBreedImage()
 
             if (allBreedsResponse.status != Status.SUCCESS || randomBreedImage.status != Status.SUCCESS) {
                 mutableViewState.update {
-                    GuessDogContract.ViewState.Error
+                    mutableViewState.value.copy(
+                        isLoading = false,
+                        hasError = true,
+                    )
                 }
             } else {
                 val allBreeds = breedMapTransformer.transformBreedsResponseToDisplayMap(allBreedsResponse.breeds)
@@ -45,7 +55,10 @@ class GuessDogViewModel @Inject constructor(
                     // something wrong with extracting the breed name from the URL,
                     // or breed does not exist in the all breeds map
                     if (correctAnswerKey == null || allBreeds[correctAnswerKey] == null) {
-                        GuessDogContract.ViewState.Error
+                        mutableViewState.value.copy(
+                            isLoading = false,
+                            hasError = true,
+                        )
                     } else {
                         getBreedContent(randomBreedImage, allBreeds, correctAnswerKey, refreshScores)
                     }
@@ -59,18 +72,23 @@ class GuessDogViewModel @Inject constructor(
         allBreeds: Map<String, String>,
         correctAnswerKey: String,
         refreshScores: Boolean
-    ) = GuessDogContract.ViewState.Content(
-            BreedData(
-                imageUrl = randomBreedImage.imageUrl,
-                breedAnswers = randomBreedChooser.chooseRandomBreedLabels(
-                    numberOfNamesToChoose = NUMBER_OF_POSSIBLE_ANSWERS - 1, // excludes correct answer
-                    correctAnswerKey = correctAnswerKey,
-                    breedMap = allBreeds
+    ) =
+        mutableViewState.value.copy(
+            isLoading = false,
+            data =
+                BreedData(
+                    imageUrl = randomBreedImage.imageUrl,
+                    breedAnswers = randomBreedChooser.chooseRandomBreedLabels(
+                        numberOfNamesToChoose = NUMBER_OF_POSSIBLE_ANSWERS - 1, // excludes correct answer
+                        correctAnswerKey = correctAnswerKey,
+                        breedMap = allBreeds
+                    ),
+                    correctAnswer = allBreeds[correctAnswerKey]!!
                 ),
-                correctAnswer = allBreeds[correctAnswerKey]!!
-            ),
-            numberCorrect = if (refreshScores) 0 else mutableViewState.value.contentStateOrNull?.numberCorrect ?: 0,
-            numberAnswered = if (refreshScores) 0 else mutableViewState.value.contentStateOrNull?.numberAnswered ?: 0
+            numberCorrect = if (refreshScores) 0 else mutableViewState.value.numberCorrect,
+            numberAnswered = if (refreshScores) 0 else mutableViewState.value.numberAnswered,
+            hasError = false,
+            gameOver = if (refreshScores) false else mutableViewState.value.gameOver,
         )
 
     /**
@@ -88,18 +106,18 @@ class GuessDogViewModel @Inject constructor(
     }
 
     fun onAnswerSelected(selected: String, correctAnswer: String) {
-        mutableViewState.value.contentStateOrNull?.let { content ->
-            mutableViewState.update {
-                GuessDogContract.ViewState.Content(
-                    data = content.data,
-                    numberCorrect = content.numberCorrect + if (selected == correctAnswer) 1 else 0,
-                    numberAnswered = content.numberAnswered + 1
-                )
-            }
+        mutableViewState.update {
+            val numberAnswered = mutableViewState.value.numberAnswered + 1
+            mutableViewState.value.copy(
+                numberCorrect = mutableViewState.value.numberCorrect + if (selected == correctAnswer) 1 else 0,
+                numberAnswered = numberAnswered,
+                gameOver = numberAnswered == NUMBER_OF_QUESTIONS
+            )
         }
     }
 
     companion object {
         private const val NUMBER_OF_POSSIBLE_ANSWERS = 4
+        private const val NUMBER_OF_QUESTIONS = 10
     }
 }

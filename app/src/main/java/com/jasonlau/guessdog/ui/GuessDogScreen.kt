@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -22,11 +23,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.ColorPainter
 import androidx.compose.ui.platform.LocalInspectionMode
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.jasonlau.guessdog.ui.theme.GuessDogTheme
+
+private const val NUMBER_OF_QUESTIONS = 10
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -37,10 +41,12 @@ fun GuessDogScreen(
     onAnswerSelected: (selected: String, correct: String) -> Unit,
     numberCorrect: Int,
     numberAnswered: Int,
-    onResetClicked: () -> Unit,
+    onRestartGame: () -> Unit,
     onNextClicked: () -> Unit,
+    gameOver: Boolean
 ) {
-    var questionAnswered by remember { mutableStateOf(false) }
+    var selectedAnswer by remember { mutableStateOf<String?>(null) }
+    var showResetAlertDialog by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -50,15 +56,13 @@ fun GuessDogScreen(
                         Text(
                             text = "GuessDog",
                             color = Color.Black,
-                            fontSize = 18.sp
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Medium,
                         )
                     },
                     actions = {
                         TextButton(
-                            onClick = {
-                                onResetClicked()
-                                questionAnswered = false
-                            }
+                            onClick = { showResetAlertDialog = true }
                         ) {
                             Text(text = "RESET")
                         }
@@ -78,7 +82,9 @@ fun GuessDogScreen(
                 } else {
                     null
                 },
-                modifier = Modifier.weight(1f)
+                modifier = Modifier
+                    .weight(1f)
+                    .align(alignment = Alignment.CenterHorizontally)
             )
 
             Column(
@@ -87,16 +93,22 @@ fun GuessDogScreen(
                 Row(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(
-                        text = "Score: $numberCorrect/$numberAnswered",
+                    Row(
                         modifier = Modifier.weight(1f)
-                    )
+                    ) {
+                        Text(
+                            text = "Score: $numberCorrect/$numberAnswered",
+                        )
+                        EmojiIndicator(numberAnswered, numberCorrect)
+                    }
+
 
                     TextButton(
                         onClick = {
                             onNextClicked()
-                            questionAnswered = false
-                        }
+                            selectedAnswer = null
+                        },
+                        enabled = selectedAnswer != null,
                     ) {
                         Text(text = "NEXT >")
                     }
@@ -104,16 +116,22 @@ fun GuessDogScreen(
                 possibleChoices.forEach {
                     Button(
                         onClick = {
-                            if (!questionAnswered) {
+                            if (selectedAnswer == null) {
                                 onAnswerSelected(it, correctAnswer)
-                                questionAnswered = true
+                                selectedAnswer = it
                             }
                         },
-                        colors = if (questionAnswered) {
-                            if (it == correctAnswer) {
-                                ButtonDefaults.buttonColors(containerColor = Color.Green)
-                            } else {
-                                ButtonDefaults.buttonColors(containerColor = Color.Red)
+                        colors = if (selectedAnswer != null) {
+                            when (it) {
+                                correctAnswer -> {
+                                    ButtonDefaults.buttonColors(containerColor = Color.Green)
+                                }
+                                selectedAnswer -> {
+                                    ButtonDefaults.buttonColors(containerColor = Color.Red)
+                                }
+                                else -> {
+                                    ButtonDefaults.buttonColors()
+                                }
                             }
                         } else {
                             ButtonDefaults.buttonColors()
@@ -126,6 +144,105 @@ fun GuessDogScreen(
             }
         }
     }
+
+    if (showResetAlertDialog) {
+        ResetAlertDialog(
+            onDismiss = {
+                showResetAlertDialog = false
+            },
+            onConfirm = {
+                showResetAlertDialog = false
+                onRestartGame()
+                selectedAnswer = null
+            }
+        )
+    } else if (gameOver) {
+        GameOverAlertDialog(
+            onConfirm = {
+                onRestartGame()
+            },
+            score = numberCorrect,
+        )
+    }
+}
+
+@Composable
+private fun EmojiIndicator(numberAnswered: Int, numberCorrect: Int) {
+    val emojiCold = "\uD83E\uDD76"
+    val emojiHot = "\uD83D\uDD25"
+    if (numberAnswered > 5) {
+        val ratioCorrect = numberCorrect.toDouble() / numberAnswered.toDouble()
+        val indicatorText = when {
+            ratioCorrect < 0.5 -> emojiCold
+            ratioCorrect > 0.8 -> emojiHot
+            else -> null
+        }
+
+        indicatorText?.let {
+            Text(
+                text = it,
+                modifier = Modifier.padding(start = 8.dp)
+            )
+        }
+    }
+}
+
+@Composable
+private fun ResetAlertDialog(
+    onDismiss: () -> Unit,
+    onConfirm: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        confirmButton = {
+            TextButton(
+                onClick = onConfirm
+            ) {
+                Text(text = "OK")
+            }
+        },
+        dismissButton = {
+            TextButton(
+                onClick = onDismiss
+            ) {
+                Text(text = "CANCEL")
+            }
+        },
+        title = { Text(text = "Warning") },
+        text = { Text(text = "Are you sure you wish to reset this game? All progress will be lost!") },
+    )
+}
+
+@Composable
+private fun GameOverAlertDialog(
+    onConfirm: () -> Unit,
+    score: Int,
+) {
+    val perfectScore = score == NUMBER_OF_QUESTIONS
+    val title = if (perfectScore) {
+        "Congratulations!"
+    } else {
+        "Better luck next time!"
+    }
+
+    val text = if (perfectScore) {
+        "You are already a dog expert!"
+    } else {
+        "Keep playing to try to improve your score"
+    }
+
+    AlertDialog(
+        onDismissRequest = { },
+        confirmButton = {
+            TextButton(
+                onClick = onConfirm
+            ) {
+                Text(text = "PLAY AGAIN")
+            }
+        },
+        title = { Text(text = title) },
+        text = { Text(text = text) },
+    )
 }
 
 @Preview
@@ -137,11 +254,35 @@ fun PreviewGuessDogScreen() {
             possibleChoices = listOf("A", "B", "C", "D"),
             correctAnswer = "A",
             onAnswerSelected = { _,_ -> },
-            numberCorrect = 0,
-            numberAnswered = 0,
-            onResetClicked = { },
+            numberCorrect = 6,
+            numberAnswered = 6,
+            onRestartGame = { },
             onNextClicked = { },
+            gameOver = false,
         )
     }
 }
 
+@Preview
+@Composable
+fun PreviewResetAlertDialog() {
+    GuessDogTheme {
+        ResetAlertDialog({}, {})
+    }
+}
+
+@Preview
+@Composable
+fun PreviewGameOverAlertDialogExpert() {
+    GuessDogTheme {
+        GameOverAlertDialog({}, NUMBER_OF_QUESTIONS)
+    }
+}
+
+@Preview
+@Composable
+fun PreviewGameOverAlertDialogNovice() {
+    GuessDogTheme {
+        GameOverAlertDialog({}, 5)
+    }
+}
