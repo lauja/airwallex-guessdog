@@ -1,11 +1,13 @@
 package com.jasonlau.guessdog.di
 
 import com.google.gson.Gson
-import com.jasonlau.guessdog.RandomBreedChooser
+import com.jasonlau.guessdog.util.RandomBreedChooserImpl
 import com.jasonlau.guessdog.repository.DogApi
 import com.jasonlau.guessdog.repository.GuessDogRepository
 import com.jasonlau.guessdog.repository.GuessDogRepositoryImpl
 import com.jasonlau.guessdog.util.BreedMapTransformer
+import com.jasonlau.guessdog.util.BreedMapTransformerImpl
+import com.jasonlau.guessdog.util.RandomBreedChooser
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -33,8 +35,8 @@ class AppModule {
     ): GuessDogRepository = GuessDogRepositoryImpl(dogApi)
 
     @Provides
-    fun provideRandomBreedChooser(): RandomBreedChooser = RandomBreedChooser()
+    fun provideRandomBreedChooser(): RandomBreedChooser = RandomBreedChooserImpl()
 
     @Provides
-    fun provideBreedMapTransformer(): BreedMapTransformer = BreedMapTransformer()
+    fun provideBreedMapTransformer(): BreedMapTransformer = BreedMapTransformerImpl()
 }

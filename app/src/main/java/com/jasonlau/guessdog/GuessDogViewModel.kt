@@ -7,6 +7,7 @@ import com.jasonlau.guessdog.data.RandomBreedImageResponse
 import com.jasonlau.guessdog.data.Status
 import com.jasonlau.guessdog.repository.GuessDogRepository
 import com.jasonlau.guessdog.util.BreedMapTransformer
+import com.jasonlau.guessdog.util.RandomBreedChooser
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
