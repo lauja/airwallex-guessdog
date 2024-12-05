@@ -1,9 +1,14 @@
+@file:Suppress("UnstableApiUsage")
+
+import app.cash.paparazzi.gradle.PaparazziPlugin
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.hilt)
     alias(libs.plugins.ksp)
+    alias(libs.plugins.paparazzi)
 }
 
 android {
@@ -43,6 +48,25 @@ android {
     buildFeatures {
         compose = true
     }
+    testOptions {
+        unitTests {
+            all {
+                // filter out paparazzi tests when running unit tests
+                val isPaparazzi = gradle.startParameter.taskNames.any { taskName -> taskName.contains("Paparazzi") }
+                if (!isPaparazzi) {
+                    it.exclude("**/*UiTest.class")
+                }
+            }
+        }
+    }
+}
+
+// filter out unit tests when running paparazzi tests
+tasks.withType<PaparazziPlugin.PaparazziTask> {
+    val isPaparazzi = gradle.startParameter.taskNames.any { it.contains("Paparazzi") }
+    if (isPaparazzi) {
+        setTestNameIncludePatterns(listOf("*UiTest"))
+    }
 }
 
 dependencies {
@@ -70,8 +94,14 @@ dependencies {
     // Coil
     implementation(libs.coil.compose)
 
+    implementation(libs.paparazzi) {
+        exclude(group = "org.bouncycastle", module = "bcpkix-jdk18on")
+            .because("The version of bcpkix-jdk15on brought-in by paparazzi causes `TrustAllX509TrustManager` lint error.")
+    }
+
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.testParameterInjector)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))

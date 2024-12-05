@@ -251,8 +251,8 @@ fun PreviewGuessDogScreen() {
     GuessDogTheme {
         GuessDogScreen(
             imageUrl = "https://example.com/image.jpg",
-            possibleChoices = listOf("A", "B", "C", "D"),
-            correctAnswer = "A",
+            possibleChoices = listOf("Doberman", "Indian Rajapalayam", "Dingo", "Brabancon"),
+            correctAnswer = "Doberman",
             onAnswerSelected = { _,_ -> },
             numberCorrect = 6,
             numberAnswered = 6,

@@ -1,6 +1,7 @@
 package com.jasonlau.guessdog
 
 import com.jasonlau.guessdog.repository.FakeGuessDogRepositoryImpl
+import com.jasonlau.guessdog.util.BreedMapTransformer
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Rule
@@ -14,7 +15,11 @@ class GuessDogViewModelTest {
 
     @Before
     fun setup() {
-        guessDogViewModel = GuessDogViewModel(FakeGuessDogRepositoryImpl())
+        guessDogViewModel = GuessDogViewModel(
+            FakeGuessDogRepositoryImpl(),
+            BreedMapTransformer(),
+            RandomBreedChooser(),
+        )
     }
 
     @Test
