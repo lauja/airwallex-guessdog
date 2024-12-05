@@ -23,14 +23,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.ColorPainter
 import androidx.compose.ui.platform.LocalInspectionMode
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
+import com.jasonlau.guessdog.R
 import com.jasonlau.guessdog.ui.theme.GuessDogTheme
 
 private const val NUMBER_OF_QUESTIONS = 10
+private const val PASS_THRESHOLD = 0.5
+private const val HIGH_SCORE_THRESHOLD = 0.8
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -54,7 +58,7 @@ fun GuessDogScreen(
                 TopAppBar(
                     title = {
                         Text(
-                            text = "GuessDog",
+                            text = stringResource(R.string.toolbar_title),
                             color = Color.Black,
                             fontSize = 20.sp,
                             fontWeight = FontWeight.Medium,
@@ -64,7 +68,7 @@ fun GuessDogScreen(
                         TextButton(
                             onClick = { showResetAlertDialog = true }
                         ) {
-                            Text(text = "RESET")
+                            Text(text = stringResource(R.string.reset_button_label))
                         }
                     }
                 )
@@ -97,7 +101,11 @@ fun GuessDogScreen(
                         modifier = Modifier.weight(1f)
                     ) {
                         Text(
-                            text = "Score: $numberCorrect/$numberAnswered",
+                            text = stringResource(
+                                R.string.score_label,
+                                numberCorrect,
+                                numberAnswered
+                            ),
                         )
                         EmojiIndicator(numberAnswered, numberCorrect)
                     }
@@ -110,7 +118,7 @@ fun GuessDogScreen(
                         },
                         enabled = selectedAnswer != null,
                     ) {
-                        Text(text = "NEXT >")
+                        Text(text = stringResource(R.string.next_button_label))
                     }
                 }
                 possibleChoices.forEach {
@@ -168,13 +176,11 @@ fun GuessDogScreen(
 
 @Composable
 private fun EmojiIndicator(numberAnswered: Int, numberCorrect: Int) {
-    val emojiCold = "\uD83E\uDD76"
-    val emojiHot = "\uD83D\uDD25"
     if (numberAnswered > 5) {
         val ratioCorrect = numberCorrect.toDouble() / numberAnswered.toDouble()
         val indicatorText = when {
-            ratioCorrect < 0.5 -> emojiCold
-            ratioCorrect > 0.8 -> emojiHot
+            ratioCorrect < PASS_THRESHOLD -> stringResource(R.string.emoji_cold_face)
+            ratioCorrect > HIGH_SCORE_THRESHOLD -> stringResource(R.string.emoji_fire)
             else -> null
         }
 
@@ -198,18 +204,18 @@ private fun ResetAlertDialog(
             TextButton(
                 onClick = onConfirm
             ) {
-                Text(text = "OK")
+                Text(text = stringResource(R.string.reset_dialog_ok_button_label))
             }
         },
         dismissButton = {
             TextButton(
                 onClick = onDismiss
             ) {
-                Text(text = "CANCEL")
+                Text(text = stringResource(R.string.reset_dialog_cancel_button_label))
             }
         },
-        title = { Text(text = "Warning") },
-        text = { Text(text = "Are you sure you wish to reset this game? All progress will be lost!") },
+        title = { Text(text = stringResource(R.string.reset_dialog_title)) },
+        text = { Text(text = stringResource(R.string.reset_dialog_description)) },
     )
 }
 
@@ -220,15 +226,15 @@ private fun GameOverAlertDialog(
 ) {
     val perfectScore = score == NUMBER_OF_QUESTIONS
     val title = if (perfectScore) {
-        "Congratulations!"
+        stringResource(R.string.game_over_dialog_perfect_title)
     } else {
-        "Better luck next time!"
+        stringResource(R.string.game_over_dialog_imperfect_title)
     }
 
     val text = if (perfectScore) {
-        "You are already a dog expert!"
+        stringResource(R.string.game_over_dialog_perfect_description)
     } else {
-        "Keep playing to try to improve your score"
+        stringResource(R.string.game_over_dialog_imperfect_description)
     }
 
     AlertDialog(
@@ -237,7 +243,7 @@ private fun GameOverAlertDialog(
             TextButton(
                 onClick = onConfirm
             ) {
-                Text(text = "PLAY AGAIN")
+                Text(text = stringResource(R.string.game_over_dialog_button_label))
             }
         },
         title = { Text(text = title) },

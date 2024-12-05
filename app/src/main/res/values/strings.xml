@@ -1,3 +1,20 @@
 <resources>
     <string name="app_name">GuessDog</string>
+    <string name="error_page_description">An unexpected error has occurred</string>
+    <string name="error_page_button_label">TRY AGAIN</string>
+    <string name="toolbar_title">GuessDog</string>
+    <string name="reset_button_label">RESET</string>
+    <string name="emoji_cold_face">🥶</string>
+    <string name="emoji_fire">🔥</string>
+    <string name="reset_dialog_cancel_button_label">Cancel</string>
+    <string name="reset_dialog_ok_button_label">OK</string>
+    <string name="reset_dialog_title">Warning</string>
+    <string name="reset_dialog_description">Are you sure you wish to reset this game? All progress will be lost!</string>
+    <string name="game_over_dialog_perfect_title">Congratulations!</string>
+    <string name="game_over_dialog_imperfect_title">Better luck next time!</string>
+    <string name="game_over_dialog_perfect_description">You are already a dog expert!</string>
+    <string name="game_over_dialog_imperfect_description">Keep playing to try to improve your score</string>
+    <string name="game_over_dialog_button_label">PLAY AGAIN</string>
+    <string name="next_button_label"><![CDATA[NEXT >]]></string>
+    <string name="score_label">Score: %1$s/%2$s</string>
 </resources>
