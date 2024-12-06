@@ -24,6 +24,11 @@ Units tests on the viewModel and util classes can be run with:
 ./gradlew app:testDebugUnitTest
 ```
 
+The instrumentation test can be run with:
+```
+./gradlew app:connectedAndroidTest
+```
+
 ### Strategy
 1. Get a random dog image by going to: https://dog.ceo/api/breeds/image/random
 2. The response will contain an image URL eg.
