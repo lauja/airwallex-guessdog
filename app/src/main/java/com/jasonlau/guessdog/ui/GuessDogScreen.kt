@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
@@ -22,7 +21,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.ColorPainter
 import androidx.compose.ui.platform.LocalInspectionMode
+import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
@@ -46,6 +49,8 @@ fun GuessDogScreen(
     gameOver: Boolean
 ) {
     var selectedAnswer by remember { mutableStateOf<String?>(null) }
+    val view = LocalView.current
+
 
     Column {
         AsyncImage(
@@ -88,14 +93,26 @@ fun GuessDogScreen(
                     },
                     enabled = selectedAnswer != null,
                 ) {
-                    Text(text = stringResource(R.string.next_button_label))
+                    val nextContentDescription = stringResource(R.string.next_button_content_description)
+                    Text(
+                        text = stringResource(R.string.next_button_label),
+                        modifier = Modifier.semantics {
+                            contentDescription = nextContentDescription
+                        }
+                    )
                 }
             }
-            possibleChoices.forEach {
+            possibleChoices.forEachIndexed { index, it ->
                 OutlinedButton(
                     onClick = {
                         if (selectedAnswer == null) {
                             onAnswerSelected(it, correctAnswer)
+                            val answerResult = if (it == correctAnswer) {
+                                "correct"
+                            } else {
+                                "incorrect"
+                            }
+                            view.announceForAccessibility("The selected answer $it is $answerResult")
                             selectedAnswer = it
                         }
                     },
@@ -116,6 +133,7 @@ fun GuessDogScreen(
                         ButtonDefaults.outlinedButtonColors()
                     },
                     modifier = Modifier.fillMaxWidth()
+                        .testTag("Button$index")
                 ) {
                     Text(text = it)
                 }

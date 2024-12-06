@@ -16,5 +16,6 @@
     <string name="game_over_dialog_imperfect_description">Keep playing to try to improve your score</string>
     <string name="game_over_dialog_button_label">PLAY AGAIN</string>
     <string name="next_button_label"><![CDATA[NEXT >]]></string>
+    <string name="next_button_content_description">next</string>
     <string name="score_label">Score: %1$s/%2$s</string>
 </resources>
