@@ -1,6 +1,6 @@
 # GuessDog
 
-https://github.com/user-attachments/assets/14ab15d3-f131-4d72-b0c2-4937cd4cc913
+https://github.com/user-attachments/assets/23696fe5-16d7-45b1-aaf7-9bb5784c094c
 
 
 The player is asked to guess the dog for the image provided, given the 4 random choices on the screen. After the user selects their preference, the correct answer will be highlighted in green. If the user answered incorrectly, the selected answer will be highlighted in red.
