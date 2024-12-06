@@ -4,15 +4,14 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Scaffold
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -24,10 +23,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.ColorPainter
 import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.jasonlau.guessdog.R
 import com.jasonlau.guessdog.ui.theme.GuessDogTheme
@@ -36,7 +33,6 @@ private const val NUMBER_OF_QUESTIONS = 10
 private const val PASS_THRESHOLD = 0.5
 private const val HIGH_SCORE_THRESHOLD = 0.8
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GuessDogScreen(
     imageUrl: String,
@@ -50,121 +46,84 @@ fun GuessDogScreen(
     gameOver: Boolean
 ) {
     var selectedAnswer by remember { mutableStateOf<String?>(null) }
-    var showResetAlertDialog by remember { mutableStateOf(false) }
 
-    Scaffold(
-        topBar = {
-            Surface(shadowElevation = 4.dp) {
-                TopAppBar(
-                    title = {
-                        Text(
-                            text = stringResource(R.string.toolbar_title),
-                            color = Color.Black,
-                            fontSize = 20.sp,
-                            fontWeight = FontWeight.Medium,
-                        )
-                    },
-                    actions = {
-                        TextButton(
-                            onClick = { showResetAlertDialog = true }
-                        ) {
-                            Text(text = stringResource(R.string.reset_button_label))
-                        }
-                    }
-                )
-            }
-        }
-    ) { innerPadding ->
+    Column {
+        AsyncImage(
+            model = imageUrl,
+            contentDescription = null,
+            placeholder = if (LocalInspectionMode.current) {
+                ColorPainter(Color.LightGray)
+            } else {
+                null
+            },
+            modifier = Modifier
+                .weight(1f)
+                .align(alignment = Alignment.CenterHorizontally)
+        )
+
         Column(
-            modifier = Modifier.padding(innerPadding)
+            modifier = Modifier.padding(8.dp)
         ) {
-            AsyncImage(
-                model = imageUrl,
-                contentDescription = null,
-                placeholder = if (LocalInspectionMode.current) {
-                    ColorPainter(Color.LightGray)
-                } else {
-                    null
-                },
-                modifier = Modifier
-                    .weight(1f)
-                    .align(alignment = Alignment.CenterHorizontally)
-            )
-
-            Column(
-                modifier = Modifier.padding(8.dp)
+            Row(
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 Row(
-                    verticalAlignment = Alignment.CenterVertically
+                    modifier = Modifier.weight(1f)
                 ) {
-                    Row(
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Text(
-                            text = stringResource(
-                                R.string.score_label,
-                                numberCorrect,
-                                numberAnswered
-                            ),
-                        )
-                        EmojiIndicator(numberAnswered, numberCorrect)
-                    }
-
-
-                    TextButton(
-                        onClick = {
-                            onNextClicked()
-                            selectedAnswer = null
-                        },
-                        enabled = selectedAnswer != null,
-                    ) {
-                        Text(text = stringResource(R.string.next_button_label))
-                    }
+                    Text(
+                        text = stringResource(
+                            R.string.score_label,
+                            numberCorrect,
+                            numberAnswered
+                        ),
+                    )
+                    EmojiIndicator(numberAnswered, numberCorrect)
                 }
-                possibleChoices.forEach {
-                    Button(
-                        onClick = {
-                            if (selectedAnswer == null) {
-                                onAnswerSelected(it, correctAnswer)
-                                selectedAnswer = it
+
+
+                TextButton(
+                    onClick = {
+                        onNextClicked()
+                        selectedAnswer = null
+                    },
+                    enabled = selectedAnswer != null,
+                ) {
+                    Text(text = stringResource(R.string.next_button_label))
+                }
+            }
+            possibleChoices.forEach {
+                OutlinedButton(
+                    onClick = {
+                        if (selectedAnswer == null) {
+                            onAnswerSelected(it, correctAnswer)
+                            selectedAnswer = it
+                        }
+                    },
+                    shape = RoundedCornerShape(8.dp),
+                    colors = if (selectedAnswer != null) {
+                        when (it) {
+                            correctAnswer -> {
+                                ButtonDefaults.outlinedButtonColors(containerColor = Color.Green)
                             }
-                        },
-                        colors = if (selectedAnswer != null) {
-                            when (it) {
-                                correctAnswer -> {
-                                    ButtonDefaults.buttonColors(containerColor = Color.Green)
-                                }
-                                selectedAnswer -> {
-                                    ButtonDefaults.buttonColors(containerColor = Color.Red)
-                                }
-                                else -> {
-                                    ButtonDefaults.buttonColors()
-                                }
+                            selectedAnswer -> {
+                                ButtonDefaults.outlinedButtonColors(containerColor = Color.Red)
                             }
-                        } else {
-                            ButtonDefaults.buttonColors()
-                        },
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text(text = it)
-                    }
+                            else -> {
+                                ButtonDefaults.outlinedButtonColors()
+                            }
+                        }
+                    } else {
+                        ButtonDefaults.outlinedButtonColors()
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(text = it)
                 }
             }
         }
     }
 
-    if (showResetAlertDialog) {
-        ResetAlertDialog(
-            onDismiss = {
-                showResetAlertDialog = false
-            },
-            onConfirm = {
-                showResetAlertDialog = false
-                onRestartGame()
-                selectedAnswer = null
-            }
-        )
-    } else if (gameOver) {
+    if (gameOver) {
         GameOverAlertDialog(
             onConfirm = {
                 onRestartGame()
@@ -191,32 +150,6 @@ private fun EmojiIndicator(numberAnswered: Int, numberCorrect: Int) {
             )
         }
     }
-}
-
-@Composable
-private fun ResetAlertDialog(
-    onDismiss: () -> Unit,
-    onConfirm: () -> Unit
-) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        confirmButton = {
-            TextButton(
-                onClick = onConfirm
-            ) {
-                Text(text = stringResource(R.string.reset_dialog_ok_button_label))
-            }
-        },
-        dismissButton = {
-            TextButton(
-                onClick = onDismiss
-            ) {
-                Text(text = stringResource(R.string.reset_dialog_cancel_button_label))
-            }
-        },
-        title = { Text(text = stringResource(R.string.reset_dialog_title)) },
-        text = { Text(text = stringResource(R.string.reset_dialog_description)) },
-    )
 }
 
 @Composable
@@ -255,25 +188,19 @@ private fun GameOverAlertDialog(
 @Composable
 fun PreviewGuessDogScreen() {
     GuessDogTheme {
-        GuessDogScreen(
-            imageUrl = "https://example.com/image.jpg",
-            possibleChoices = listOf("Doberman", "Indian Rajapalayam", "Dingo", "Brabancon"),
-            correctAnswer = "Doberman",
-            onAnswerSelected = { _,_ -> },
-            numberCorrect = 6,
-            numberAnswered = 6,
-            onRestartGame = { },
-            onNextClicked = { },
-            gameOver = false,
-        )
-    }
-}
-
-@Preview
-@Composable
-fun PreviewResetAlertDialog() {
-    GuessDogTheme {
-        ResetAlertDialog({}, {})
+        Surface {
+            GuessDogScreen(
+                imageUrl = "https://example.com/image.jpg",
+                possibleChoices = listOf("Doberman", "Indian Rajapalayam", "Dingo", "Brabancon"),
+                correctAnswer = "Doberman",
+                onAnswerSelected = { _,_ -> },
+                numberCorrect = 6,
+                numberAnswered = 6,
+                onRestartGame = { },
+                onNextClicked = { },
+                gameOver = false,
+            )
+        }
     }
 }
 
