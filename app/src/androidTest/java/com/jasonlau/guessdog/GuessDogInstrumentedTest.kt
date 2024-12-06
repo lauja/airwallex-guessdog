@@ -16,17 +16,16 @@ class GuessDogInstrumentedTest {
 
     @Test
     fun guessDogEndToEndTest() {
+        val nextLabel = "NEXT >"
         for (i in 1..10) {
-            composeTestRule.waitUntilExactlyOneExists(matcher = hasText("NEXT >"), 10000L)
+            composeTestRule.waitUntilExactlyOneExists(matcher = hasText(nextLabel), 10000L)
 
             // not really required, just a pause so that we can see the screen briefly
             Thread.sleep(1000)
 
             composeTestRule.onNodeWithTag("Button0").performClick()
 
-            composeTestRule.onNodeWithText("NEXT >").performClick()
-
-            composeTestRule.onNodeWithText("NEXT >").performClick()
+            composeTestRule.onNodeWithText(nextLabel).performClick()
         }
     }
 }
