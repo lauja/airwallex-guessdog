@@ -94,10 +94,8 @@ dependencies {
     // Coil
     implementation(libs.coil.compose)
 
-    testImplementation(libs.paparazzi) {
-        exclude(group = "org.bouncycastle", module = "bcpkix-jdk18on")
-            .because("The version of bcpkix-jdk15on brought-in by paparazzi causes `TrustAllX509TrustManager` lint error.")
-    }
+    // Paparazzi
+    testImplementation(libs.paparazzi)
 
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)
